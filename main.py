@@ -62,6 +62,97 @@ def place_tower(grid, x, y, key):
     # have some way of ensuring tower is removed from cursor if not successfully  placed
 
 
+class Tower:
+    def __init__(self, towerType, Location, upgradesPath1, upgradesPath2, keyBind):
+        self.towerType = towerType
+        self.Location = Location
+        self.upgradesPath1 = upgradesPath1
+        self.upgradesPath2 = upgradesPath2
+        self.keyBind = keyBind
+
+    def set_towerType(self, new_towerType):
+        self.towerType = new_towerType
+
+    def set_Location(self, new_Location):
+        self.Location = new_Location
+
+    def set_upgradesPath1(self, new_upgradesPath1):
+        self.upgradesPath1 = new_upgradesPath1
+
+    def set_upgradesPath2(self, new_upgradesPath2):
+        self.upgradesPath2 = new_upgradesPath2
+
+    def PlaceTower(self):
+        pyautogui.press(self.keyBind)
+        pyautogui.click(self.Location[0], self.Location[1])
+        for _ in range(self.upgradesPath1):
+            pyautogui.press(',')
+        for _ in range(self.upgradesPath2):
+            pyautogui.press('.')
+
+
+# Towers can only go 3 or 4 upgrades on one path at a time, that's why some have 2 different options
+lead_towers = {"Dart Monkey": ["q", 4, lambda: random.randint(0, 2)],
+               "Boomerang Monkey": ["r", lambda: random.randint(0, 2), lambda: random.randint(2, 4)],
+               "Bomb Shooter 1": ["y", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+               "Bomb Shooter 2": ["y", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+               "Tack Shooter": ["w", 4, lambda: random.randint(0, 2)],
+               "Ice Monkey 1": ["a", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+               "Ice Monkey 2": ["a", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+               "Glue Monkey 1": ["s", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+               "Glue Monkey 2": ["s", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+               "Sniper Monkey 1": ["e", lambda: random.randint(1, 4), lambda: random.randint(0, 2)],
+               "Sniper Monkey 2": ["e", lambda: random.randint(1, 2), lambda: random.randint(0, 4)],
+               "Wizard Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+               "Wizard Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+               "Super Monkey": ["g", 2, lambda: random.randint(0, 4)],
+               "Bloonchipper": [";", 2, lambda: random.randint(0, 4)]}
+
+camo_towers = {"Dart Monkey": ["q", 2, lambda: random.randint(0, 4)],
+               "Boomerang Monkey": ["r", 4, lambda: random.randint(0, 2)],
+               "Sniper Monkey": ["e", lambda: random.randint(0, 4), 2],
+               "Wizard Monkey": ["h", lambda: random.randint(0, 4), 2],
+               "Ninja Monkey 1": ["t", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+               "Ninja Monkey 2": ["t", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],}
+
+
+all_tower_types = {"Dart Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Dart Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Boomerang Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Boomerang Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Bomb Shooter 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Bomb Shooter 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Tack Shooter 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Tack Shooter 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Ice Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Ice Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Glue Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Glue Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Sniper Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Sniper Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Ninja Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Ninja Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Super Monkey 1": ["h", lambda: random.randint(0, 3), lambda: random.randint(0, 2)],
+                   "Super Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Bloonchipper  1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Bloonchipper 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   "Wizard Monkey 1": ["h", lambda: random.randint(0, 4), lambda: random.randint(0, 2)],
+                   "Wizard Monkey 2": ["h", lambda: random.randint(0, 2), lambda: random.randint(0, 4)],
+                   }
+
+
+# Each parent maybe be an array of the towers placed (or at least wants to place)
+def crossover(Parent1, Parent2):
+    # Not sure 100% what would be best for crossover, take a tower for each parent and swap them?
+    index1 = random.randint(0, len(Parent1))
+    index2 = random.randint(0, len(Parent2))
+    temp1 = Parent1[index1]
+    temp2 = Parent2[index2]
+    Parent1[index1] = temp2
+    Parent2[index2] = temp1
+    return Parent1, Parent2
+
+
 if __name__ == '__main__':
     # size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
     # WINDOW_WIDTH = size[0]
