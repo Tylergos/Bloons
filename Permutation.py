@@ -33,7 +33,7 @@ class Permutation:
                 upgrades2 = TT.all_tower_types.get(tower_type)[2]()
                 keybind = TT.all_tower_types.get(tower_type)[0]
             # Need to fix the location stuff
-            self.towers_wanted.append(Tower(tower_type, random.choice(grid), upgrades1, upgrades2, keybind, cancel_coord))
+            self.towers_wanted.append(Tower(tower_type, random.choice(random.choice(grid)), upgrades1, upgrades2, keybind, cancel_coord))
 
     def place_towers(self):
         for tower in self.towers_wanted:
@@ -41,5 +41,6 @@ class Permutation:
 
     def set_fitness(self, fitness):
         self.fitness = fitness
+
     def __repr__(self):
         return str(self.towers_wanted)

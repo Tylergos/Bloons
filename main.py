@@ -8,6 +8,7 @@ import pytesseract
 from PIL import Image
 import TowerTypes as TT
 from Permutation import Permutation
+import re
 
 WINDOW_HEIGHT = 0
 WINDOW_WIDTH = 600
@@ -16,6 +17,7 @@ GRIDTL = (7, 30)  # left, top
 GRIDBR = (561 - GRIDTL[0], 430 - GRIDTL[1])  # right, bottom
 DEATHTL = (280, 180)  # left, top
 DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
+CANCEL_COORDS = (620, 50)
 
 
 def adjust_window(name, width, height=0):
@@ -166,7 +168,7 @@ def tournament_selection(selection_size, pop_size, population):
     return population[fitnesses.index(max_fitness)]
 
 
-def initialize(pop_size):
+def initialize(pop_size, grid):
     """
     Makes an initial population of size pop_size
     :param pop_size: The size the population will be
@@ -175,7 +177,7 @@ def initialize(pop_size):
     # Similar to what was done for assignment 1 (Lucas Croslyn)
     population = []
     for _ in range(pop_size):
-        population.append(Permutation((0, 0)))
+        population.append(Permutation(grid, CANCEL_COORDS))
     return population
 
 
@@ -195,11 +197,12 @@ def evaluate_permutation(permutation):
 def death_wave():
     screenshot_death()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-    test = pytesseract.image_to_string(Image.open('death.png'))
-    if len(test) != 0:
-        ind = test.find("Wave: ")
+    text = pytesseract.image_to_string(Image.open('death.png'))
+    if len(text) != 0:
+        ind = text.find("Wave: ")
         if ind != -1:
-            return int(test[(ind + len("Wave: "))::])
+            re.sub('[^A-Za-z0-9]+', '', text)
+            return int(text[(ind + len("Wave: "))::])
     return -1
 
 
@@ -208,12 +211,18 @@ if __name__ == '__main__':
     WINDOW_WIDTH = size[0]
     WINDOW_HEIGHT = size[1]
     time.sleep(0.05)
+    im = screenshot_map()
+    grid = gridify(im)
+
+    perm = initialize(1, grid)
+    print(evaluate_permutation(perm[0]))
+
     # im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
     # im = pag.screenshot("death.png", region=(*DEATHTL, *DEATHBR))
     # pag.screenshot("window.png", region=(*TOP_LEFT, *(np.add(TOP_LEFT, [WINDOW_WIDTH, WINDOW_HEIGHT]))))
     # coords = gridify(im)
-    val = death_wave()
-    print(val)
+    # val = death_wave()
+    # print(val)
 
     # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
     # test = pytesseract.image_to_string(Image.open('death.png'))
