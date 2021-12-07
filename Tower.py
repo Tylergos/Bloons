@@ -18,6 +18,10 @@ class Tower:
         self.key_bind = key_bind
         self.cancel_coord = cancel_coord
 
+    def __repr__(self):
+        return self.tower_type
+
+
     def set_tower_type(self, new_tower_type):
         self.tower_type = new_tower_type
 

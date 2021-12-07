@@ -7,6 +7,7 @@ import numpy as np
 import pytesseract
 from PIL import Image
 import TowerTypes as TT
+from Permutation import Permutation
 
 WINDOW_HEIGHT = 0
 WINDOW_WIDTH = 600
@@ -103,22 +104,29 @@ def cross_swap(parent1, parent2):
 
 
 def mut_change_tower_type(parent):
+    """
+    Mutation that will take a tower in a parent and replace it with a new tower.
+    This new tower may be a different type and also have different amounts of upgrades.
+    It will stay in the same location it was before.
+    :param parent: The parent to change
+    :return: Returns the changed parent
+    """
     cur_tower = random.choise(parent)
     dictionary_num = random.randint(1, 3)
     if dictionary_num == 1:
-        tower_index = random.randint(0, len(TT.lead_towers))
+        tower_index = random.randint(0, len(TT.lead_towers)-1)
         tower_type = list(TT.lead_towers.keys())[tower_index]
         upgrades1 = TT.lead_towers.get(tower_type)[1]()
         upgrades2 = TT.lead_towers.get(tower_type)[2]()
         keybind = TT.lead_towers.get(tower_type)[0]
     elif dictionary_num == 2:
-        tower_index = random.randint(0, len(TT.camo_towers))
+        tower_index = random.randint(0, len(TT.camo_towers)-1)
         tower_type = list(TT.camo_towers.keys())[tower_index]
         upgrades1 = TT.camo_towers.get(tower_type)[1]()
         upgrades2 = TT.camo_towers.get(tower_type)[2]()
         keybind = TT.camo_towers.get(tower_type)[0]
     else:
-        tower_index = random.randint(0, len(TT.all_tower_types))
+        tower_index = random.randint(0, len(TT.all_tower_types)-1)
         tower_type = list(TT.all_tower_types.keys())[tower_index]
         upgrades1 = TT.all_tower_types.get(tower_type)[1]()
         upgrades2 = TT.all_tower_types.get(tower_type)[2]()
@@ -127,6 +135,37 @@ def mut_change_tower_type(parent):
     cur_tower.set_upgrades_path1(upgrades1)
     cur_tower.set_upgrades_path2(upgrades2)
     cur_tower.set_keybind(keybind)
+    return parent
+
+
+def tournament_selection(selection_size, pop_size, population):
+    """
+    Does a tournament selection. Picks selection_size amount of permutations from population and sees which is best
+    :param selection_size: The number of permutations in selection
+    :param pop_size: The total size of the population
+    :param population: The current population the selection is done on
+    :return: The best permutation from the current population
+    """
+    # Similar to what was done for assignment 1 (Lucas Croslyn)
+    choices = random.sample(range(0, pop_size), selection_size)
+    fitnesses = []
+    for i in choices:
+        fitnesses.append(population[i].fitness)
+    max_fitness = max(fitnesses)
+    return population[fitnesses.index(max_fitness)]
+
+
+def initialize(pop_size):
+    """
+    Makes an initial population of size pop_size
+    :param pop_size: The size the population will be
+    :return: The generated initial population
+    """
+    # Similar to what was done for assignment 1 (Lucas Croslyn)
+    population = []
+    for _ in range(pop_size):
+        population.append(Permutation((0, 0)))
+    return population
 
 
 if __name__ == '__main__':
