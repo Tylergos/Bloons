@@ -1,3 +1,4 @@
+import random
 # Towers can only go 3 or 4 upgrades on one path at a time, that's why some have 2 different options
 lead_towers = {"Dart Monkey": ["q", lambda: 4, lambda: random.randint(0, 2)],
                "Boomerang Monkey": ["r", lambda: random.randint(0, 2), lambda: random.randint(2, 4)],
