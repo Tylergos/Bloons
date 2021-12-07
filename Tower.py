@@ -1,3 +1,6 @@
+import pyautogui as pag
+
+
 class Tower:
     def __init__(self, tower_type, location, upgrades_path1, upgrades_path2, key_bind, cancel_coord):
         """
@@ -26,6 +29,9 @@ class Tower:
 
     def set_upgrades_path2(self, new_upgrades_path2):
         self.upgrades_path2 = new_upgrades_path2
+
+    def set_keybind(self, new_keybind):
+        self.key_bind = new_keybind
 
     def place_tower(self):
         """
