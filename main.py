@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytesseract
 from PIL import Image
+import TowerTypes as TT
 
 WINDOW_HEIGHT = 0
 WINDOW_WIDTH = 600
@@ -105,23 +106,23 @@ def mut_change_tower_type(parent):
     cur_tower = random.choise(parent)
     dictionary_num = random.randint(1, 3)
     if dictionary_num == 1:
-        tower_index = random.randint(0, len(lead_towers))
-        tower_type = list(lead_towers.keys())[tower_index]
-        upgrades1 = lead_towers.get(tower_type)[1]()
-        upgrades2 = lead_towers.get(tower_type)[2]()
-        keybind = lead_towers.get(tower_type)[0]
+        tower_index = random.randint(0, len(TT.lead_towers))
+        tower_type = list(TT.lead_towers.keys())[tower_index]
+        upgrades1 = TT.lead_towers.get(tower_type)[1]()
+        upgrades2 = TT.lead_towers.get(tower_type)[2]()
+        keybind = TT.lead_towers.get(tower_type)[0]
     elif dictionary_num == 2:
-        tower_index = random.randint(0, len(camo_towers))
-        tower_type = list(camo_towers.keys())[tower_index]
-        upgrades1 = camo_towers.get(tower_type)[1]()
-        upgrades2 = camo_towers.get(tower_type)[2]()
-        keybind = camo_towers.get(tower_type)[0]
-    else dictionary_num == 3:
-        tower_index = random.randint(0, len(all_tower_types))
-        tower_type = list(all_tower_types.keys())[tower_index]
-        upgrades1 = all_tower_types.get(tower_type)[1]()
-        upgrades2 = all_tower_types.get(tower_type)[2]()
-        keybind = all_tower_types.get(tower_type)[0]
+        tower_index = random.randint(0, len(TT.camo_towers))
+        tower_type = list(TT.camo_towers.keys())[tower_index]
+        upgrades1 = TT.camo_towers.get(tower_type)[1]()
+        upgrades2 = TT.camo_towers.get(tower_type)[2]()
+        keybind = TT.camo_towers.get(tower_type)[0]
+    else:
+        tower_index = random.randint(0, len(TT.all_tower_types))
+        tower_type = list(TT.all_tower_types.keys())[tower_index]
+        upgrades1 = TT.all_tower_types.get(tower_type)[1]()
+        upgrades2 = TT.all_tower_types.get(tower_type)[2]()
+        keybind = TT.all_tower_types.get(tower_type)[0]
     cur_tower.set_tower_type(tower_type)
     cur_tower.set_upgrades_path1(upgrades1)
     cur_tower.set_upgrades_path2(upgrades2)
