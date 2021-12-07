@@ -15,6 +15,13 @@ GRIDBR = (561 - GRIDTL[0], 430 - GRIDTL[1])  # right, bottom
 
 
 def adjust_window(name, width, height=0):
+    """
+    Used to adjust the size of the window
+    :param name: string of the name of the window, typically "Bloons TD5"
+    :param width: width in pixels of the window
+    :param height: height in pixels of the window, height=0 for automatic resizing of the window
+    :return: Returns the window size and top left of the window
+    """
     # height = 0 results in automatic sizing based on width
     win = pgw.getWindowsWithTitle(name)[0]
     win.size = (width, height)
@@ -23,16 +30,32 @@ def adjust_window(name, width, height=0):
     return win.size, win.topleft
 
 
-def screenshot_window(width, height):
-    return pag.screenshot("window.png", region=(0, 0, width, height))
+def screenshot_window(width, height, name="window.png"):
+    """
+    Used to take a screenshot of the window, automatically titled window.png
+    :param width: width in pixel of the screenshot
+    :param height: height in pixel of the screenshot
+    :param name: The name of the picture
+    :return: reference to the image file
+    """
+    return pag.screenshot(name, region=(0, 0, width, height))
 
 
-def screenshot_map():
-    return pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
+def screenshot_map(name="map.png"):
+    """
+    Takes a screenshot of the map according to the grid, automatically titled map.png
+    :param name: The name of the picture
+    :return: reference to the image file
+    """
+    return pag.screenshot(name, region=(*GRIDTL, *GRIDBR))
 
 
-def show_grid():
-    im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
+def show_grid(img_name="map.png"):
+    """
+    Shows the map image with the grid overlayed onto it
+    :param img_name: The name of the image file, by default map.png
+    """
+    im = pag.screenshot(img_name, region=(*GRIDTL, *GRIDBR))
     coords = gridify(im)
     for coord in coords:
         for x, y in coord:
@@ -43,6 +66,12 @@ def show_grid():
 
 
 def gridify(image, gridsize=48):
+    """
+    Takes in the image of the map and creates a grid relative to the size of the map
+    :param image: The image file of the map
+    :param gridsize: The size if the tiles in pixels, default is 48 as this is the largest size of monkey being used
+    :return: The coordinate grid generated
+    """
     frac = image.size[0] / 867
     cells_x = 867 // gridsize
     cells_y = int(867 * image.size[1] / image.size[0]) // gridsize
@@ -50,15 +79,26 @@ def gridify(image, gridsize=48):
     for x in range(cells_x):
         tempcoord = []
         for y in range(cells_y):
-            tempcoord.append((np.floor(frac * gridsize * x + gridsize/2), np.floor(frac * gridsize * y + gridsize/2)))
+            tempcoord.append((np.floor(frac * gridsize * x + gridsize/2) + GRIDTL[0], np.floor(frac * gridsize * y + gridsize/2) + GRIDTL[1]))
         coords.append(tempcoord)
     return coords
 
 
-def place_tower(grid, x, y, key):
-    pag.press(key)
-    pag.click((grid[x][y][0] + GRIDTL[0], grid[x][y][1] + GRIDTL[1]))
-    # have some way of ensuring tower is removed from cursor if not successfully  placed
+# Each parent maybe be an array of the towers placed (or at least wants to place)
+def cross_swap(parent1, parent2):
+    """
+    Crossover that swaps a tower from each parent to the other
+    :param parent1: Permutation of parent1
+    :param parent2: Permutation of parent2
+    :return: Permutation of parent1 and parent2
+    """
+    index1 = random.randint(0, len(parent1))
+    index2 = random.randint(0, len(parent2))
+    temp1 = parent1[index1]
+    temp2 = parent2[index2]
+    parent1[index1] = temp2
+    parent2[index2] = temp1
+    return parent1, parent2
 
 
 if __name__ == '__main__':
