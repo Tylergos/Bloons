@@ -32,3 +32,5 @@ class Permutation:
                 keybind = TT.all_tower_types.get(tower_type)[0]
             # Need to fix the location stuff
             self.towers_wanted.append(Tower(tower_type, (0, 0), upgrades1, upgrades2, keybind, cancel_coord))
+    def __repr__(self):
+        return str(self.towers_wanted)
