@@ -14,6 +14,8 @@ WINDOW_WIDTH = 600
 TOP_LEFT = (0, 0)
 GRIDTL = (7, 30)  # left, top
 GRIDBR = (561 - GRIDTL[0], 430 - GRIDTL[1])  # right, bottom
+DEATHTL = (280, 180)  # left, top
+DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
 
 
 def adjust_window(name, width, height=0):
@@ -52,6 +54,14 @@ def screenshot_map(name="map.png"):
     return pag.screenshot(name, region=(*GRIDTL, *GRIDBR))
 
 
+def screenshot_death(name="death.png"):
+    """
+    Takes a screenshot of the death wave counter, automatically titled death.png
+    :param name: The name of the picture
+    :return: reference to the image file
+    """
+    return pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
+
 def show_grid(img_name="map.png"):
     """
     Shows the map image with the grid overlayed onto it
@@ -74,6 +84,7 @@ def gridify(image, gridsize=48):
     :param gridsize: The size if the tiles in pixels, default is 48 as this is the largest size of monkey being used
     :return: The coordinate grid generated
     """
+    # map size is 867 pixels wide
     frac = image.size[0] / 867
     cells_x = 867 // gridsize
     cells_y = int(867 * image.size[1] / image.size[0]) // gridsize
@@ -168,15 +179,43 @@ def initialize(pop_size):
     return population
 
 
+def evaluate_permutation(permutation):
+    im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
+    im = pag.screenshot("death.png", region=(*DEATHTL, *DEATHBR))
+    pag.screenshot("window.png", region=(*TOP_LEFT, *(np.add(TOP_LEFT, [WINDOW_WIDTH, WINDOW_HEIGHT]))))
+    # place all the towers
+    permutation.place_towers()
+    while True:
+        val = death_wave()
+        if val != -1:
+            return val
+        time.sleep(5)
+
+
+def death_wave():
+    screenshot_death()
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+    test = pytesseract.image_to_string(Image.open('death.png'))
+    if len(test) != 0:
+        ind = test.find("Wave: ")
+        if ind != -1:
+            return int(test[(ind + len("Wave: "))::])
+    return -1
+
+
 if __name__ == '__main__':
-    # size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
-    # WINDOW_WIDTH = size[0]
-    # WINDOW_HEIGHT = size[1]
-    # time.sleep(0.05)
+    size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
+    WINDOW_WIDTH = size[0]
+    WINDOW_HEIGHT = size[1]
+    time.sleep(0.05)
     # im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
+    # im = pag.screenshot("death.png", region=(*DEATHTL, *DEATHBR))
     # pag.screenshot("window.png", region=(*TOP_LEFT, *(np.add(TOP_LEFT, [WINDOW_WIDTH, WINDOW_HEIGHT]))))
     # coords = gridify(im)
-    # place_tower(coords, 0, 0, TOWERS[0])
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-    test = pytesseract.image_to_string(Image.open('Capture.PNG'))
-    str.replace('\f', '')
+    val = death_wave()
+    print(val)
+
+    # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+    # test = pytesseract.image_to_string(Image.open('death.png'))
+    # # # str.replace('\f', '')
+    # print(test)

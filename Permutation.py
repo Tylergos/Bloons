@@ -4,11 +4,13 @@ import TowerTypes as TT
 
 
 class Permutation:
-    def __init__(self, cancel_coord):
+    def __init__(self, grid, cancel_coord):
         """
+        :param grid: The grid with all the possible pixel locations to place towers
         :param cancel_coord: The location to click on to cancel placing any tower
         """
         self.towers_wanted = []
+        self.fitness = 0
         num_towers = random.randint(1, 10)
         for i in range(num_towers):
             dictionary_num = random.randint(1, 3)
@@ -31,6 +33,13 @@ class Permutation:
                 upgrades2 = TT.all_tower_types.get(tower_type)[2]()
                 keybind = TT.all_tower_types.get(tower_type)[0]
             # Need to fix the location stuff
-            self.towers_wanted.append(Tower(tower_type, (0, 0), upgrades1, upgrades2, keybind, cancel_coord))
+            self.towers_wanted.append(Tower(tower_type, random.choice(grid), upgrades1, upgrades2, keybind, cancel_coord))
+
+    def place_towers(self):
+        for tower in self.towers_wanted:
+            tower.place_tower()
+
+    def set_fitness(self, fitness):
+        self.fitness = fitness
     def __repr__(self):
         return str(self.towers_wanted)
