@@ -19,7 +19,6 @@ DEATHTL = (260, 170)  # left, top
 DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
 CANCEL_COORDS = (620, 50)
 
-
 def adjust_window(name, width, height=0):
     """
     Used to adjust the size of the window
@@ -104,7 +103,6 @@ def gridify(image, gridsize=48):
     return coords
 
 
-# Each parent maybe be an array of the towers placed (or at least wants to place)
 def cross_swap(parent1, parent2):
     """
     Crossover that swaps a tower from each parent to the other
@@ -112,12 +110,12 @@ def cross_swap(parent1, parent2):
     :param parent2: Permutation of parent2
     :return: Permutation of parent1 and parent2
     """
-    index1 = random.randint(0, len(parent1))
-    index2 = random.randint(0, len(parent2))
-    temp1 = parent1[index1]
-    temp2 = parent2[index2]
-    parent1[index1] = temp2
-    parent2[index2] = temp1
+    index1 = random.randint(0, len(parent1.towers_wanted)-1)
+    index2 = random.randint(0, len(parent2.towers_wanted)-1)
+    temp1 = parent1.towers_wanted[index1]
+    temp2 = parent2.towers_wanted[index2]
+    parent1.towers_wanted[index1] = temp2
+    parent2.towers_wanted[index2] = temp1
     return parent1, parent2
 
 
@@ -129,7 +127,11 @@ def mut_change_tower_type(parent):
     :param parent: The parent to change
     :return: Returns the changed parent
     """
-    cur_tower = random.choise(parent)
+    # Gets the towers which will be changed into a different one
+    cur_tower = random.choice(parent.towers_wanted)
+    # Multiple categories for the towers depending on if they have a specialization or not.
+    # Generic category which has everything, camo category for towers which can see camo
+    # and a lead category for towers which can destroy lead
     dictionary_num = random.randint(1, 3)
     if dictionary_num == 1:
         tower_index = random.randint(0, len(TT.lead_towers)-1)
@@ -149,6 +151,7 @@ def mut_change_tower_type(parent):
         upgrades1 = TT.all_tower_types.get(tower_type)[1]()
         upgrades2 = TT.all_tower_types.get(tower_type)[2]()
         keybind = TT.all_tower_types.get(tower_type)[0]
+    # Change the different parameters for the tower which was changed
     cur_tower.set_tower_type(tower_type)
     cur_tower.set_upgrades_path1(upgrades1)
     cur_tower.set_upgrades_path2(upgrades2)
@@ -187,31 +190,90 @@ def initialize(pop_size, grid):
 
 
 def evaluate_permutation(permutation):
-    im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
-    im = pag.screenshot("death.png", region=(*DEATHTL, *DEATHBR))
-    pag.screenshot("window.png", region=(*TOP_LEFT, *(np.add(TOP_LEFT, [WINDOW_WIDTH, WINDOW_HEIGHT]))))
+    """
+    Runs the game on the current towers for the permutation being evaluated
+    :param permutation: The current towers that will be evaluated to see which round they get to
+    :return: Returns which round the towers managed to get to before dying
+    """
     # place all the towers
     permutation.place_towers()
+    # starts the match and speeds up
+    pag.press('space', presses=2)
     while True:
+        # Waits until the game over screen appears to read which round died on
         val = death_wave()
         if val != -1:
             return val
         time.sleep(5)
 
 
+def evaluate_population(population):
+    """
+    This will update the fitness for each permutation
+    :param population: The current population that will be evaluated
+    :return: Not important as the function just needs to change the fitness for each permutation
+    """
+    for permutation in population:
+        permutation.fitness = evaluate_permutation(permutation)
+        # Restarts the game and waits to load the map
+        pag.click(300, 300)
+        time.sleep(3)
+    return 0
+
+
+
 def death_wave():
+    """
+    Takes a screenshot of the death area to see if the death screen popped up.
+    Pytesseract will read that screenshot to see if it can read any words, if it can that means the death screen appeared.
+    :return: The wave numbered that the game died on
+    """
     screenshot_death()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-    text = pytesseract.image_to_string(Image.open('death.png'))
+    # The config makes it so tesseract will only have those characters to match to.
+    # Had issue with round 40 reading as #0 before
+    text = pytesseract.image_to_string(Image.open('death.png'), config="-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:' '")
     if len(text) != 0:
         ind = text.find("Wave: ")
         if ind != -1:
+            # Gets only the text after 'Wave: ' which will be the round counter
             re.sub('[^A-Za-z0-9]+', '', text)
             return int(text[(ind + len("Wave: "))::])
     return -1
 
 
+def next_generation(cur_population, pop_size, selection_size, mutation_chance, crossover_chance):
+    """
+    This will do all the GA stuff like selection, mutation and crossover
+    :param cur_population: The current population before any changes
+    :param pop_size: The size of the population
+    :param selection_size: The size of the selection, tournament style
+    :param mutation_chance: The chance for a mutation to occur on a single parent.
+    :param crossover_chance: The chance for a crossover to happen on the two parents
+    :return: The new population after all the changes. Will be the same size as the old population
+    """
+    new_poulation = []
+    while len(new_poulation) < pop_size:
+        # Maybe do a copy thing so it will make a new thing
+        parent1 = tournament_selection(selection_size, pop_size, cur_population)
+        parent2 = tournament_selection(selection_size, pop_size, cur_population)
+        if random.randint(0, 100) < mutation_chance:
+            mut_change_tower_type(parent1)
+        if random.randint(0, 100) < mutation_chance:
+            mut_change_tower_type(parent2)
+        if random.randint(0, 100) < crossover_chance:
+            parent1, parent2 = cross_swap(parent1, parent2)
+        new_poulation.extend([parent1, parent2])
+    return new_poulation
+
+
 if __name__ == '__main__':
+    POP_SIZE = 2
+    SELECTION_SIZE = 2
+    GENERATION_SIZE = 3
+    MUT_CHANCE = 0.5
+    CROSS_CHANCE = 0.3
+
     size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
     WINDOW_WIDTH = size[0]
     WINDOW_HEIGHT = size[1]
@@ -219,15 +281,22 @@ if __name__ == '__main__':
     im = screenshot_map()
     grid = gridify(im)
 
-    perm = initialize(1, grid)
-    print(evaluate_permutation(perm[0]))
-    show_grid()
 
-    # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-    # im = Image.open('death.png')
-    # im = im.convert('L')
-    # im.save("death2.png")
-    # text = pytesseract.image_to_string(im, lang="eng")
-    # print(text)
+    all_populations = []
+    # Make an initial population and get the fitnesses for it
+    pop = initialize(POP_SIZE, grid)
+    evaluate_population(pop)
+    for _ in range(GENERATION_SIZE):
+        # Append the current population into a list which will contain all the populations.
+        # After, make a new population which will have evolved from the previous
+        # Calculate the new fitnesses for that new population
+        # Repeat for how many generations wanted
+        all_populations.append(pop)
+        pop = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+        evaluate_population(pop)
+    # show_grid()
+
+
+
 
 
