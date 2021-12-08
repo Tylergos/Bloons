@@ -5,7 +5,7 @@ import pyautogui as pag
 import matplotlib.pyplot as plt
 import numpy as np
 import pytesseract
-from PIL import Image
+from PIL import Image, ImageOps
 import TowerTypes as TT
 from Permutation import Permutation
 import re
@@ -15,7 +15,7 @@ WINDOW_WIDTH = 600
 TOP_LEFT = (0, 0)
 GRIDTL = (7, 30)  # left, top
 GRIDBR = (561 - GRIDTL[0], 430 - GRIDTL[1])  # right, bottom
-DEATHTL = (280, 180)  # left, top
+DEATHTL = (260, 170)  # left, top
 DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
 CANCEL_COORDS = (620, 50)
 
@@ -62,7 +62,12 @@ def screenshot_death(name="death.png"):
     :param name: The name of the picture
     :return: reference to the image file
     """
-    return pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
+    im = pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
+    # Image is made grey scale so tesseract can read it better
+    im = im.convert('L')
+    im.save("death.png")
+    return im
+
 
 def show_grid(img_name="map.png"):
     """
@@ -216,15 +221,13 @@ if __name__ == '__main__':
 
     perm = initialize(1, grid)
     print(evaluate_permutation(perm[0]))
-
-    # im = pag.screenshot("map.png", region=(*GRIDTL, *GRIDBR))
-    # im = pag.screenshot("death.png", region=(*DEATHTL, *DEATHBR))
-    # pag.screenshot("window.png", region=(*TOP_LEFT, *(np.add(TOP_LEFT, [WINDOW_WIDTH, WINDOW_HEIGHT]))))
-    # coords = gridify(im)
-    # val = death_wave()
-    # print(val)
+    show_grid()
 
     # pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
-    # test = pytesseract.image_to_string(Image.open('death.png'))
-    # # # str.replace('\f', '')
-    # print(test)
+    # im = Image.open('death.png')
+    # im = im.convert('L')
+    # im.save("death2.png")
+    # text = pytesseract.image_to_string(im, lang="eng")
+    # print(text)
+
+
