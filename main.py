@@ -178,7 +178,7 @@ def mut_change_tower_type(parent):
 
 
 def mut_change_location(parent):
-    cur_tower = random.choice(parent)
+    cur_tower = random.choice(parent.towers_wanted)
     cur_tower.set_location(random.choice(random.choice(grid)))
 
 
@@ -227,6 +227,8 @@ def evaluate_permutation(permutation):
         val = death_wave()
         if val != -1:
             return val
+        pag.click(300, 300)
+        pag.press('space', presses=2)
         time.sleep(5)
 
 
@@ -339,9 +341,9 @@ def check_money():
 
 
 if __name__ == '__main__':
-    POP_SIZE = 2
-    SELECTION_SIZE = 2
-    GENERATION_SIZE = 2
+    POP_SIZE = 10
+    SELECTION_SIZE = 3
+    GENERATION_SIZE = 500
     MUT_CHANCE = 70
     CROSS_CHANCE = 30
 
