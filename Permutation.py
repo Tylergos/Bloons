@@ -11,7 +11,8 @@ class Permutation:
         """
         self.towers_wanted = []
         self.fitness = 0
-        num_towers = random.randint(1, 10)
+        num_towers = 10
+        # num_towers = random.randint(1, 10)
         for i in range(num_towers):
             dictionary_num = random.randint(1, 3)
             if dictionary_num == 1:
