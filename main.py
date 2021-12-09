@@ -9,6 +9,7 @@ from PIL import Image, ImageOps
 import TowerTypes as TT
 from Permutation import Permutation
 import re
+import copy
 
 WINDOW_HEIGHT = 0
 WINDOW_WIDTH = 600
@@ -159,6 +160,11 @@ def mut_change_tower_type(parent):
     return parent
 
 
+def mut_change_location(parent):
+    cur_tower = random.choice(parent)
+    cur_tower.set_location(random.choice(random.choice(grid)))
+
+
 def tournament_selection(selection_size, pop_size, population):
     """
     Does a tournament selection. Picks selection_size amount of permutations from population and sees which is best
@@ -173,7 +179,7 @@ def tournament_selection(selection_size, pop_size, population):
     for i in choices:
         fitnesses.append(population[i].fitness)
     max_fitness = max(fitnesses)
-    return population[fitnesses.index(max_fitness)]
+    return copy.deepcopy(population[fitnesses.index(max_fitness)])
 
 
 def initialize(pop_size, grid):
@@ -254,13 +260,18 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
     """
     new_poulation = []
     while len(new_poulation) < pop_size:
-        # Maybe do a copy thing so it will make a new thing
         parent1 = tournament_selection(selection_size, pop_size, cur_population)
         parent2 = tournament_selection(selection_size, pop_size, cur_population)
         if random.randint(0, 100) < mutation_chance:
-            mut_change_tower_type(parent1)
+            if random.randint(0, 100) < 75:
+                mut_change_location(parent1)
+            else:
+                mut_change_tower_type(parent1)
         if random.randint(0, 100) < mutation_chance:
-            mut_change_tower_type(parent2)
+            if random.randint(0, 100) < 75:
+                mut_change_location(parent2)
+            else:
+                mut_change_tower_type(parent2)
         if random.randint(0, 100) < crossover_chance:
             parent1, parent2 = cross_swap(parent1, parent2)
         new_poulation.extend([parent1, parent2])
@@ -270,9 +281,9 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
 if __name__ == '__main__':
     POP_SIZE = 2
     SELECTION_SIZE = 2
-    GENERATION_SIZE = 3
-    MUT_CHANCE = 0.5
-    CROSS_CHANCE = 0.3
+    GENERATION_SIZE = 1
+    MUT_CHANCE = 30
+    CROSS_CHANCE = 30
 
     size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
     WINDOW_WIDTH = size[0]
@@ -280,8 +291,6 @@ if __name__ == '__main__':
     time.sleep(0.05)
     im = screenshot_map()
     grid = gridify(im)
-
-
     all_populations = []
     # Make an initial population and get the fitnesses for it
     pop = initialize(POP_SIZE, grid)
