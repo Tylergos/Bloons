@@ -200,7 +200,7 @@ def tournament_selection(selection_size, pop_size, population):
     return copy.deepcopy(population[fitnesses.index(max_fitness)])
 
 
-def initialize(pop_size, grid):
+def initialize(pop_size, grid, best=None):
     """
     Makes an initial population of size pop_size
     :param pop_size: The size the population will be
@@ -208,8 +208,13 @@ def initialize(pop_size, grid):
     """
     # Similar to what was done for assignment 1 (Lucas Croslyn)
     population = []
-    for _ in range(pop_size):
-        population.append(Permutation(grid, CANCEL_COORDS))
+    if best is None:
+        for _ in range(pop_size):
+            population.append(Permutation(grid, CANCEL_COORDS))
+    else:
+        population.append(best)
+        for _ in range(pop_size - 1):
+            population.append(Permutation(grid, CANCEL_COORDS))
     return population
 
 
@@ -277,7 +282,7 @@ def evaluate_permutation_money(permutation, wave_mod=1, money_mod=0.01):
 def death_wave():
     """
     Takes a screenshot of the death area to see if the death screen popped up.
-    Pytesseract will read that screenshot to see if it can read any words, if it can that means the death screen appeared.
+    Pytesseract will read that screenshot to see if it can read any words, if it can that means the death screen appeared
     :return: The wave numbered that the game died on
     """
     screenshot_death()
