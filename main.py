@@ -202,8 +202,10 @@ def tournament_selection(selection_size, pop_size, population):
 
 def initialize(pop_size, grid, best=None):
     """
-    Makes an initial population of size pop_size
+    Makes an initial population of size pop_size, with the option to carry over the best permutation from a previous population
     :param pop_size: The size the population will be
+    :param grid: The grid locations used for the towers
+    :param best: The best permutation to put into the population, if None the population is initialized normally
     :return: The generated initial population
     """
     # Similar to what was done for assignment 1 (Lucas Croslyn)
