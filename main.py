@@ -22,6 +22,7 @@ DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
 MONEYTL = (590, 50)  # left, top
 MONEYBR = (640 - MONEYTL[0], 65 - MONEYTL[1])  # right, bottom
 CANCEL_COORDS = (620, 50)
+ELITISM = True
 
 
 def adjust_window(name, width, height=0):
@@ -227,8 +228,7 @@ def evaluate_permutation(permutation):
         val = death_wave()
         if val != -1:
             return val
-        pag.click(300, 300)
-        pag.press('space', presses=2)
+        pag.click(150, 120)
         time.sleep(5)
 
 
@@ -305,6 +305,12 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
     :return: The new population after all the changes. Will be the same size as the old population
     """
     new_poulation = []
+    best = cur_population[0]
+    for perm in cur_population:
+        if perm.fitness > best.fitness:
+            best = perm
+    if ELITISM:
+        new_poulation.append(copy.deepcopy(best))
     while len(new_poulation) < pop_size:
         parent1 = tournament_selection(selection_size, pop_size, cur_population)
         parent2 = tournament_selection(selection_size, pop_size, cur_population)
@@ -321,7 +327,7 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
         if random.randint(0, 100) < crossover_chance:
             parent1, parent2 = cross_swap(parent1, parent2)
         new_poulation.extend([parent1, parent2])
-    return new_poulation
+    return new_poulation, best
 
 
 def check_money():
@@ -341,10 +347,10 @@ def check_money():
 
 
 if __name__ == '__main__':
-    POP_SIZE = 10
-    SELECTION_SIZE = 3
+    POP_SIZE = 20
+    SELECTION_SIZE = 4
     GENERATION_SIZE = 500
-    MUT_CHANCE = 70
+    MUT_CHANCE = 80
     CROSS_CHANCE = 30
 
     size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
@@ -359,18 +365,22 @@ if __name__ == '__main__':
     # Make an initial population and get the fitnesses for it
     pop = initialize(POP_SIZE, grid)
     evaluate_population(pop)
-    for _ in range(GENERATION_SIZE):
+    for gen in range(GENERATION_SIZE):
+        print("Currently running gen: ", gen + 1)
         # Append the current population into a list which will contain all the populations.
         # After, make a new population which will have evolved from the previous
         # Calculate the new fitnesses for that new population
         # Repeat for how many generations wanted
         all_populations.append(pop)
-        pop = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+        pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
         evaluate_population(pop)
+        print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
+
+        # Saves population data after each generation
+        file = open("populations.pkl", "wb")
+        pickle.dump(all_populations, file)
+        file.close()
     # show_grid()
-    file = open("populations.pkl", "wb")
-    pickle.dump(all_populations, file)
-    file.close()
 
 
 
