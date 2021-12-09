@@ -1,3 +1,4 @@
+import pickle
 import time
 import random
 import pygetwindow as pgw
@@ -18,7 +19,10 @@ GRIDTL = (7, 30)  # left, top
 GRIDBR = (561 - GRIDTL[0], 430 - GRIDTL[1])  # right, bottom
 DEATHTL = (260, 170)  # left, top
 DEATHBR = (405 - DEATHTL[0], 235 - DEATHTL[1])  # right, bottom
+MONEYTL = (590, 50)  # left, top
+MONEYBR = (640 - MONEYTL[0], 65 - MONEYTL[1])  # right, bottom
 CANCEL_COORDS = (620, 50)
+
 
 def adjust_window(name, width, height=0):
     """
@@ -65,7 +69,20 @@ def screenshot_death(name="death.png"):
     im = pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
     # Image is made grey scale so tesseract can read it better
     im = im.convert('L')
-    im.save("death.png")
+    im.save(name)
+    return im
+
+
+def screenshot_money(name="money.png"):
+    """
+    Takes a screenshot of the death wave counter, automatically titled money.png
+    :param name: The name of the picture
+    :return: reference to the image file
+    """
+    im = pag.screenshot(name, region=(*MONEYTL, *MONEYBR))
+    # Image is made grey scale so tesseract can read it better
+    im = im.convert('L')
+    im.save(name)
     return im
 
 
@@ -227,6 +244,33 @@ def evaluate_population(population):
     return 0
 
 
+# return wave as well for comparisons
+def evaluate_permutation_towers(permutation, wave_mod=1, tower_mod=1):
+    permutation.place_towers()
+    while True:
+        val = death_wave()
+        if val != -1:
+            break
+        time.sleep(5)
+    if wave_mod == 0 or tower_mod == 0:
+        raise ValueError("wave_mod or tower_mod is zero")
+    else:
+        return val // wave_mod - permutation.towers_wanted // tower_mod
+
+
+def evaluate_permutation_money(permutation, wave_mod=1, money_mod=0.01):
+    permutation.place_towers()
+    money = check_money()
+    while True:
+        val = death_wave()
+        if val != -1:
+            break
+        time.sleep(5)
+    if wave_mod == 0 or money_mod == 0:
+        raise ValueError("wave_mod or tower_mod is zero")
+    else:
+        return val // wave_mod - money // money_mod
+
 
 def death_wave():
     """
@@ -238,7 +282,7 @@ def death_wave():
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
     # The config makes it so tesseract will only have those characters to match to.
     # Had issue with round 40 reading as #0 before
-    text = pytesseract.image_to_string(Image.open('death.png'), config="-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:' '")
+    text = pytesseract.image_to_string(Image.open('death.png'), config="-c tessedit_char_whitelist=0123456789aevW:' '")
     if len(text) != 0:
         ind = text.find("Wave: ")
         if ind != -1:
@@ -278,11 +322,27 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
     return new_poulation
 
 
+def check_money():
+    """
+    Takes a screenshot of the money area to detect the money
+    Pytesseract will read that screenshot to see what the money value is
+    :return: The the amount of money remaining
+    """
+    screenshot_death()
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
+    # The config makes it so tesseract will only have those characters to match to.
+    text = pytesseract.image_to_string(Image.open('money.png'),
+                                       config="-c tessedit_char_whitelist=0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:' '")
+    if len(text) != 0:
+        return int(text)
+    return -1
+
+
 if __name__ == '__main__':
     POP_SIZE = 2
     SELECTION_SIZE = 2
-    GENERATION_SIZE = 1
-    MUT_CHANCE = 30
+    GENERATION_SIZE = 2
+    MUT_CHANCE = 70
     CROSS_CHANCE = 30
 
     size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
@@ -291,6 +351,8 @@ if __name__ == '__main__':
     time.sleep(0.05)
     im = screenshot_map()
     grid = gridify(im)
+
+
     all_populations = []
     # Make an initial population and get the fitnesses for it
     pop = initialize(POP_SIZE, grid)
@@ -304,6 +366,9 @@ if __name__ == '__main__':
         pop = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
         evaluate_population(pop)
     # show_grid()
+    file = open("populations.pkl", "wb")
+    pickle.dump(all_populations, file)
+    file.close()
 
 
 
