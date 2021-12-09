@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pytesseract
 from PIL import Image, ImageOps
-import TowerTypes as TT
-from Permutation import Permutation
+from Permutation import Permutation, pick_tower
+from Tower import Tower
 import re
 import copy
 
@@ -117,7 +117,8 @@ def gridify(image, gridsize=48):
     for x in range(cells_x):
         tempcoord = []
         for y in range(cells_y):
-            tempcoord.append((np.floor(frac * gridsize * x + gridsize/2) + GRIDTL[0], np.floor(frac * gridsize * y + gridsize/2) + GRIDTL[1]))
+            tempcoord.append((np.floor(frac * gridsize * x + gridsize / 2) + GRIDTL[0],
+                              np.floor(frac * gridsize * y + gridsize / 2) + GRIDTL[1]))
         coords.append(tempcoord)
     return coords
 
@@ -129,8 +130,8 @@ def cross_swap(parent1, parent2):
     :param parent2: Permutation of parent2
     :return: Permutation of parent1 and parent2
     """
-    index1 = random.randint(0, len(parent1.towers_wanted)-1)
-    index2 = random.randint(0, len(parent2.towers_wanted)-1)
+    index1 = random.randint(0, len(parent1.towers_wanted) - 1)
+    index2 = random.randint(0, len(parent2.towers_wanted) - 1)
     temp1 = parent1.towers_wanted[index1]
     temp2 = parent2.towers_wanted[index2]
     parent1.towers_wanted[index1] = temp2
@@ -151,26 +152,7 @@ def mut_change_tower_type(parent):
     # Multiple categories for the towers depending on if they have a specialization or not.
     # Generic category which has everything, camo category for towers which can see camo
     # and a lead category for towers which can destroy lead
-    dictionary_num = random.randint(1, 3)
-    if dictionary_num == 1:
-        tower_index = random.randint(0, len(TT.lead_towers)-1)
-        tower_type = list(TT.lead_towers.keys())[tower_index]
-        upgrades1 = TT.lead_towers.get(tower_type)[1]()
-        upgrades2 = TT.lead_towers.get(tower_type)[2]()
-        keybind = TT.lead_towers.get(tower_type)[0]
-    elif dictionary_num == 2:
-        tower_index = random.randint(0, len(TT.camo_towers)-1)
-        tower_type = list(TT.camo_towers.keys())[tower_index]
-        upgrades1 = TT.camo_towers.get(tower_type)[1]()
-        upgrades2 = TT.camo_towers.get(tower_type)[2]()
-        keybind = TT.camo_towers.get(tower_type)[0]
-    else:
-        tower_index = random.randint(0, len(TT.all_tower_types)-1)
-        tower_type = list(TT.all_tower_types.keys())[tower_index]
-        upgrades1 = TT.all_tower_types.get(tower_type)[1]()
-        upgrades2 = TT.all_tower_types.get(tower_type)[2]()
-        keybind = TT.all_tower_types.get(tower_type)[0]
-    # Change the different parameters for the tower which was changed
+    tower_type, upgrades1, upgrades2, keybind = pick_tower()
     cur_tower.set_tower_type(tower_type)
     cur_tower.set_upgrades_path1(upgrades1)
     cur_tower.set_upgrades_path2(upgrades2)
@@ -179,8 +161,37 @@ def mut_change_tower_type(parent):
 
 
 def mut_change_location(parent):
+    """
+    This mutation will pick one of the towers from the parent and move it to a new location
+    :param parent: The permutation to pick the tower from
+    :return: The updated parent
+    """
     cur_tower = random.choice(parent.towers_wanted)
     cur_tower.set_location(random.choice(random.choice(grid)))
+    return parent
+
+
+def mut_remove_tower(parent):
+    """
+    This mutation will pick a random tower to remove from the parent
+    :param parent: The permutation to remove a tower from
+    :return: The updated parent
+    """
+    parent.towers_wanted.pop(random.randrange(len(parent.towers_wanted)))
+    return parent
+
+
+def mut_add_tower(parent):
+    """
+    This mutation will add in a new random tower to the parent
+    :param parent: The permutation to add a new tower to
+    :return: The updated parent
+    """
+    tower_type, upgrades1, upgrades2, keybind = pick_tower()
+    parent.towers_wanted.insert(random.randint(0, len(parent.towers_wanted)),
+                                Tower(tower_type, random.choice(random.choice(grid)), upgrades1, upgrades2, keybind,
+                                      CANCEL_COORDS))
+    return parent
 
 
 def tournament_selection(selection_size, pop_size, population):
@@ -200,11 +211,10 @@ def tournament_selection(selection_size, pop_size, population):
     return copy.deepcopy(population[fitnesses.index(max_fitness)])
 
 
-def initialize(pop_size, grid, best=None):
+def initialize(pop_size, best=None):
     """
     Makes an initial population of size pop_size, with the option to carry over the best permutation from a previous population
     :param pop_size: The size the population will be
-    :param grid: The grid locations used for the towers
     :param best: The best permutation to put into the population, if None the population is initialized normally
     :return: The generated initial population
     """
@@ -213,6 +223,7 @@ def initialize(pop_size, grid, best=None):
     if best is None:
         for _ in range(pop_size):
             population.append(Permutation(grid, CANCEL_COORDS))
+    # This is for when the population is redone, while still keeping the current best
     else:
         population.append(best)
         for _ in range(pop_size - 1):
@@ -322,15 +333,33 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
         parent1 = tournament_selection(selection_size, pop_size, cur_population)
         parent2 = tournament_selection(selection_size, pop_size, cur_population)
         if random.randint(0, 100) < mutation_chance:
-            if random.randint(0, 100) < 75:
-                mut_change_location(parent1)
-            else:
-                mut_change_tower_type(parent1)
+            # Choose a number of mutations to do on the parent
+            mut_num = random.randint(1, 5)
+            for _ in range(mut_num):
+                # Pick which of the mutations to do
+                mut_type = random.randint(1, 4)
+                if mut_type == 1:
+                    mut_change_location(parent1)
+                elif mut_type == 2:
+                    mut_change_tower_type(parent1)
+                elif mut_type == 3:
+                    mut_add_tower(parent1)
+                elif mut_type == 4:
+                    mut_remove_tower(parent1)
         if random.randint(0, 100) < mutation_chance:
-            if random.randint(0, 100) < 75:
-                mut_change_location(parent2)
-            else:
-                mut_change_tower_type(parent2)
+            # Choose a number of mutation to do on the parent
+            mut_num = random.randint(1, 4)
+            for _ in range(mut_num):
+                # Pick which of the mutations to do
+                mut_type = random.randint(1, 4)
+                if mut_type == 1:
+                    mut_change_location(parent2)
+                elif mut_type == 2:
+                    mut_change_tower_type(parent2)
+                elif mut_type == 3:
+                    mut_add_tower(parent2)
+                elif mut_type == 4:
+                    mut_remove_tower(parent2)
         if random.randint(0, 100) < crossover_chance:
             parent1, parent2 = cross_swap(parent1, parent2)
         new_poulation.extend([parent1, parent2])
@@ -354,42 +383,39 @@ def check_money():
 
 
 if __name__ == '__main__':
-    POP_SIZE = 20
-    SELECTION_SIZE = 4
-    GENERATION_SIZE = 500
+    POP_SIZE = 10
+    SELECTION_SIZE = 3
+    GENERATION_SIZE = 10
     MUT_CHANCE = 80
-    CROSS_CHANCE = 30
+    CROSS_CHANCE = 15
+    RUNS = 5
 
-    size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
-    WINDOW_WIDTH = size[0]
-    WINDOW_HEIGHT = size[1]
-    time.sleep(0.05)
+    # size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
+    # WINDOW_WIDTH = size[0]
+    # WINDOW_HEIGHT = size[1]
+    # time.sleep(0.05)
     im = screenshot_map()
     grid = gridify(im)
-
-
-    all_populations = []
-    # Make an initial population and get the fitnesses for it
-    pop = initialize(POP_SIZE, grid)
-    evaluate_population(pop)
-    for gen in range(GENERATION_SIZE):
-        print("Currently running gen: ", gen + 1)
-        # Append the current population into a list which will contain all the populations.
-        # After, make a new population which will have evolved from the previous
-        # Calculate the new fitnesses for that new population
-        # Repeat for how many generations wanted
-        all_populations.append(pop)
-        pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+    for run in range(RUNS):
+        all_populations = []
+        # Make an initial population and get the fitnesses for it
+        pop = initialize(POP_SIZE)
         evaluate_population(pop)
-        print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
-
-        # Saves population data after each generation
-        file = open("populations.pkl", "wb")
-        pickle.dump(all_populations, file)
-        file.close()
+        for gen in range(GENERATION_SIZE - 1):
+            print("Currently running gen: ", gen + 1)
+            # This will make an entirely new population except for the current best permutation every 4th generation
+            if gen + 1 % 4 == 0:
+                pop = initialize(POP_SIZE, best)
+            # Calculate the new fitnesses for the population
+            # Append the current population into a list which will contain all the populations.
+            # After, make a new population which will have evolved from the previous
+            # Repeat for how many generations wanted
+            evaluate_population(pop)
+            all_populations.append(pop)
+            pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+            print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
+            # Saves population data after each generation
+            file = open("populations" + str(run) + ".pkl", "wb")
+            pickle.dump(all_populations, file)
+            file.close()
     # show_grid()
-
-
-
-
-
