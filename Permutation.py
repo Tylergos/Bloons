@@ -38,7 +38,9 @@ class Permutation:
         """
         self.towers_wanted = []
         self.fitness = 0
-        num_towers = random.randint(1, 3)
+        num_towers = 10
+        # num_towers = random.randint(1, 10)
+        
         for i in range(num_towers):
             tower_type, upgrades1, upgrades2, keybind = pick_tower()
             self.towers_wanted.append(Tower(tower_type, random.choice(random.choice(grid)), upgrades1, upgrades2, keybind, cancel_coord))
