@@ -269,15 +269,26 @@ def evaluate_population(population):
 # return wave as well for comparisons
 def evaluate_permutation_towers(permutation, wave_mod=1, tower_mod=1):
     permutation.place_towers()
+    pag.press('space', presses=2)
     while True:
         val = death_wave()
         if val != -1:
             break
+        pag.click(150, 120)
         time.sleep(5)
     if wave_mod == 0 or tower_mod == 0:
         raise ValueError("wave_mod or tower_mod is zero")
     else:
-        return val // wave_mod - permutation.towers_wanted // tower_mod
+        return val * wave_mod - len(permutation.towers_wanted) * tower_mod
+
+
+def evaluate_population_towers(population):
+    for permutation in population:
+        permutation.fitness = evaluate_permutation_towers(permutation)
+        # Restarts the game and waits to load the map
+        pag.click(300, 300)
+        time.sleep(3)
+
 
 
 def evaluate_permutation_money(permutation, wave_mod=1, money_mod=0.01):
@@ -306,16 +317,16 @@ def death_wave():
     # Had issue with round 40 reading as #0 before
     text = pytesseract.image_to_string(Image.open('death.png'), config="-c tessedit_char_whitelist=0123456789aevW:' '")
     if len(text) != 0:
-        ind = text.find("Wave: ")
+        ind = text.find("e: ")
         if ind != -1:
             # Gets only the text after 'Wave: ' which will be the round counter
             re.sub('[^A-Za-z0-9]+', '', text)
-            return int(text[(ind + len("Wave: "))::])
-        ind = text.find("Wave:")
+            return int(text[(ind + len("e: ")):(ind + len("e: ")+2)])
+        ind = text.find("e:")
         if ind != -1:
             # Gets only the text after 'Wave:' which will be the round counter
             re.sub('[^A-Za-z0-9]+', '', text)
-            return int(text[(ind + len("Wave:"))::])
+            return int(text[(ind + len("e:")):(ind + len("e: ")+2)])
     return -1
 
 
@@ -395,7 +406,7 @@ if __name__ == '__main__':
     GENERATION_SIZE = 10
     MUT_CHANCE = 80
     CROSS_CHANCE = 15
-    RUNS = 4
+    RUNS = 5
 
     # file = open("populations1.pkl", "rb")
     # reloaded_pops = pickle.load(file)
@@ -426,8 +437,8 @@ if __name__ == '__main__':
             all_populations.append(pop)
             pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
             print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
-            # Saves population data after each generation
-            file = open("populations_" + str(run) + ".pkl", "wb")
-            pickle.dump(all_populations, file)
-            file.close()
+    #         # Saves population data after each generation
+    #         file = open("populations_" + str(run) + ".pkl", "wb")
+    #         pickle.dump(all_populations, file)
+    #         file.close()
 # show_grid()
