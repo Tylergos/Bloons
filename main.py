@@ -6,7 +6,7 @@ import pyautogui as pag
 import matplotlib.pyplot as plt
 import numpy as np
 import pytesseract
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageEnhance
 from Permutation import Permutation, pick_tower
 from Tower import Tower
 import re
@@ -70,6 +70,8 @@ def screenshot_death(name="death.png"):
     im = pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
     # Image is made grey scale so tesseract can read it better
     im = im.convert('L')
+    enhancer = ImageEnhance.Contrast(im)
+    im = enhancer.enhance(15.0)
     im.save(name)
     return im
 
@@ -256,14 +258,12 @@ def evaluate_population(population):
     """
     This will update the fitness for each permutation
     :param population: The current population that will be evaluated
-    :return: Not important as the function just needs to change the fitness for each permutation
     """
     for permutation in population:
         permutation.fitness = evaluate_permutation(permutation)
         # Restarts the game and waits to load the map
         pag.click(300, 300)
         time.sleep(3)
-    return 0
 
 
 # return wave as well for comparisons
@@ -311,6 +311,11 @@ def death_wave():
             # Gets only the text after 'Wave: ' which will be the round counter
             re.sub('[^A-Za-z0-9]+', '', text)
             return int(text[(ind + len("Wave: "))::])
+        ind = text.find("Wave:")
+        if ind != -1:
+            # Gets only the text after 'Wave:' which will be the round counter
+            re.sub('[^A-Za-z0-9]+', '', text)
+            return int(text[(ind + len("Wave:"))::])
     return -1
 
 
@@ -390,34 +395,39 @@ if __name__ == '__main__':
     GENERATION_SIZE = 10
     MUT_CHANCE = 80
     CROSS_CHANCE = 15
-    RUNS = 5
+    RUNS = 4
 
-    # size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
-    # WINDOW_WIDTH = size[0]
-    # WINDOW_HEIGHT = size[1]
-    # time.sleep(0.05)
+    # file = open("populations1.pkl", "rb")
+    # reloaded_pops = pickle.load(file)
+    # file.close()
+
+    size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
+    WINDOW_WIDTH = size[0]
+    WINDOW_HEIGHT = size[1]
+    time.sleep(0.05)
     im = screenshot_map()
     grid = gridify(im)
-    # for run in range(RUNS):
-    #     all_populations = []
-    #     # Make an initial population and get the fitnesses for it
-    #     pop = initialize(POP_SIZE)
-    #     evaluate_population(pop)
-    #     for gen in range(GENERATION_SIZE - 1):
-    #         print("Currently running gen: ", gen + 1)
-    #         # This will make an entirely new population except for the current best permutation every 4th generation
-    #         if gen + 1 % 4 == 0:
-    #             pop = initialize(POP_SIZE, best)
-    #         # Calculate the new fitnesses for the population
-    #         # Append the current population into a list which will contain all the populations.
-    #         # After, make a new population which will have evolved from the previous
-    #         # Repeat for how many generations wanted
-    #         evaluate_population(pop)
-    #         all_populations.append(pop)
-    #         pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
-    #         print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
-    #         # Saves population data after each generation
-    #         file = open("populations" + str(run) + ".pkl", "wb")
-    #         pickle.dump(all_populations, file)
-    #         file.close()
-show_grid()
+    for run in range(RUNS):
+        all_populations = []
+        # Make an initial population and get the fitnesses for it
+        pop = initialize(POP_SIZE)
+        for gen in range(GENERATION_SIZE - 1):
+            print("Currently running gen: ", gen + 1)
+
+            # This will make an entirely new population except for the current best permutation every 4th generation
+            # if gen + 1 % 4 == 0:
+            #     pop = initialize(POP_SIZE, best)
+
+            # Calculate the new fitnesses for the population
+            # Append the current population into a list which will contain all the populations.
+            # After, make a new population which will have evolved from the previous
+            # Repeat for how many generations wanted
+            evaluate_population(pop)
+            all_populations.append(pop)
+            pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+            print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
+            # Saves population data after each generation
+            file = open("populations_" + str(run) + ".pkl", "wb")
+            pickle.dump(all_populations, file)
+            file.close()
+# show_grid()
