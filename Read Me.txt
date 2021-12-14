@@ -3,7 +3,7 @@ Video included showing the GA start running to prove it works
 
 General Things we did:
 Learn how to screenshot with Python (Setting up grid + death screen for game)
-Did image manipulation (For the death screen to be more clear)
+Did image manipulation (For the death screen to be more clear, submitted example of death after image manipulation)
 Learned how to read off of screen with tesseract (Read the death wave off the death screenshot)
 Learned how to interact with a window screen (Make game in focus, placing towers and starting enemies)
 Made the GA utilize multiple mutations, including the ability to do multiple at a time
