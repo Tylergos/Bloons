@@ -1,0 +1,12 @@
+You will not be able to run this program yourself since it needs external applications
+Video included showing the GA start running to prove it works
+
+General Things we did:
+Learn how to screenshot with Python (Setting up grid + death screen for game)
+Did image manipulation (For the death screen to be more clear)
+Learned how to read off of screen with tesseract (Read the death wave off the death screenshot)
+Learned how to interact with a window screen (Make game in focus, placing towers and starting enemies)
+Made the GA utilize multiple mutations, including the ability to do multiple at a time
+Did multiobjective (Death wave - Towers Placed)
+Did population re-initialization (Every 4th gen, reset aside from best)
+Did elitism (Both for re-initialization and per generation)
