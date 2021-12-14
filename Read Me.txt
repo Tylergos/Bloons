@@ -10,3 +10,5 @@ Made the GA utilize multiple mutations, including the ability to do multiple at 
 Did multiobjective (Death wave - Towers Placed)
 Did population re-initialization (Every 4th gen, reset aside from best)
 Did elitism (Both for re-initialization and per generation)
+Added ability to start from already made builds (Builds stored in pickle files can be read from to continue generating)
+Reduced the search space through introducing tower sections (Lead towers, camo towers, all towers)
