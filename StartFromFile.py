@@ -1,3 +1,4 @@
+import os
 import pickle
 import time
 import random
@@ -253,6 +254,7 @@ def evaluate_population(population):
         time.sleep(3)
 
 
+# return wave as well for comparisons
 def evaluate_permutation_towers(permutation, wave_mod=1, tower_mod=1):
     permutation.place_towers()
     pag.press('space', presses=2)
@@ -262,7 +264,10 @@ def evaluate_permutation_towers(permutation, wave_mod=1, tower_mod=1):
             break
         pag.click(150, 120)
         time.sleep(5)
-    return val * wave_mod - len(permutation.towers_wanted) * tower_mod
+    if wave_mod == 0 or tower_mod == 0:
+        raise ValueError("wave_mod or tower_mod is zero")
+    else:
+        return val * wave_mod - len(permutation.towers_wanted) * tower_mod
 
 
 def evaluate_population_towers(population):
@@ -352,41 +357,49 @@ def next_generation(cur_population, pop_size, selection_size, mutation_chance, c
     return new_poulation, best
 
 
+
 if __name__ == '__main__':
     POP_SIZE = 10
     SELECTION_SIZE = 3
-    GENERATION_SIZE = 10
+    GENERATION_SIZE = 1
     MUT_CHANCE = 80
     CROSS_CHANCE = 15
-    RUNS = 5
+    RUNS = 1
 
-    size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
-    WINDOW_WIDTH = size[0]
-    WINDOW_HEIGHT = size[1]
-    time.sleep(0.05)
-    im = screenshot_map()
-    grid = gridify(im)
-    for run in range(RUNS):
-        all_populations = []
-        # Make an initial population and get the fitnesses for it
-        pop = initialize(POP_SIZE)
-        for gen in range(GENERATION_SIZE):
-            print("Currently running gen: ", gen + 1)
+    default = []
+    for filename in os.listdir("New folder/Default"):
+        file = open("New folder/Tower/populations_tow2.pkl", "rb")
+        reloaded_pops = pickle.load(file)
+        file.close()
 
-            # This will make an entirely new population except for the current best permutation every 4th generation
-            # if gen + 1 % 4 == 0:
-            #     pop = initialize(POP_SIZE, best)
+        size, tl = adjust_window("Bloons TD5", WINDOW_WIDTH)
+        WINDOW_WIDTH = size[0]
+        WINDOW_HEIGHT = size[1]
+        time.sleep(0.05)
+        im = screenshot_map()
+        grid = gridify(im)
+        for run in range(RUNS):
+            all_populations = reloaded_pops
+            pop = all_populations[8]
+            # Make an initial population and get the fitnesses for it
+            # pop = initialize(POP_SIZE)
+            for gen in range(GENERATION_SIZE):
+                print("Currently running gen: ", gen + 1)
 
-            # Calculate the new fitnesses for the population
-            # Append the current population into a list which will contain all the populations.
-            # After, make a new population which will have evolved from the previous
-            # Repeat for how many generations wanted
-            evaluate_population_towers(pop)
-            all_populations.append(pop)
-            pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
-            print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
-            # Saves population data after each generation
-            file = open("populations_towY" + str(run) + ".pkl", "wb")
-            pickle.dump(all_populations, file)
-            file.close()
+                # This will make an entirely new population except for the current best permutation every 4th generation
+                # if gen + 1 % 4 == 0:
+                #     pop = initialize(POP_SIZE, best)
+
+                # Calculate the new fitnesses for the population
+                # Append the current population into a list which will contain all the populations.
+                # After, make a new population which will have evolved from the previous
+                # Repeat for how many generations wanted
+                pop, best = next_generation(pop, POP_SIZE, SELECTION_SIZE, MUT_CHANCE, CROSS_CHANCE)
+                evaluate_population(pop)
+                all_populations.append(pop)
+                print("Best this gen: wave: ", str(best.fitness), " using: ", str(best))
+        #         # Saves population data after each generation
+        #         file = open(filename + "Up" + str(run) + ".pkl", "wb")
+        #         pickle.dump(all_populations, file)
+        #         file.close()
 # show_grid()
