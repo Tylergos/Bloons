@@ -21,7 +21,6 @@ class Tower:
     def __repr__(self):
         return self.tower_type + " at coords: " + str(self.location)
 
-
     def set_tower_type(self, new_tower_type):
         self.tower_type = new_tower_type
 

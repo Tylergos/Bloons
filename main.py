@@ -41,38 +41,38 @@ def adjust_window(name, width, height=0):
     return win.size, win.topleft
 
 
-def screenshot_window(width, height, name="window.png"):
+def screenshot_window(width, height, img_name="window.png"):
     """
     Used to take a screenshot of the window, automatically titled window.png
     :param width: width in pixel of the screenshot
     :param height: height in pixel of the screenshot
-    :param name: The name of the picture
+    :param img_name: The name of the picture
     :return: reference to the image file
     """
-    return pag.screenshot(name, region=(0, 0, width, height))
+    return pag.screenshot(img_name, region=(0, 0, width, height))
 
 
-def screenshot_map(name="map.png"):
+def screenshot_map(img_name="map.png"):
     """
     Takes a screenshot of the map according to the grid, automatically titled map.png
-    :param name: The name of the picture
+    :param img_name: The name of the picture
     :return: reference to the image file
     """
-    return pag.screenshot(name, region=(*GRIDTL, *GRIDBR))
+    return pag.screenshot(img_name, region=(*GRIDTL, *GRIDBR))
 
 
-def screenshot_death(name="death.png"):
+def screenshot_death(img_name="death.png"):
     """
     Takes a screenshot of the death wave counter, automatically titled death.png
-    :param name: The name of the picture
+    :param img_name: The name of the picture
     :return: reference to the image file
     """
-    im = pag.screenshot(name, region=(*DEATHTL, *DEATHBR))
+    im = pag.screenshot(img_name, region=(*DEATHTL, *DEATHBR))
     # Image is made grey scale so tesseract can read it better
     im = im.convert('L')
     enhancer = ImageEnhance.Contrast(im)
     im = enhancer.enhance(15.0)
-    im.save(name)
+    im.save(f"Screenshots/{img_name}")
     return im
 
 
@@ -273,7 +273,7 @@ def evaluate_population_towers(population):
         time.sleep(3)
 
 
-def death_wave():
+def death_wave(img_name="death.png"):
     """
     Takes a screenshot of the death area to see if the death screen popped up.
     Pytesseract will read that screenshot to see if it can read any words, if it can that means the death screen appeared
@@ -283,7 +283,7 @@ def death_wave():
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract'
     # The config makes it so tesseract will only have those characters to match to.
     # Had issue with round 40 reading as #0 before
-    text = pytesseract.image_to_string(Image.open('death.png'), config="-c tessedit_char_whitelist=0123456789aevW:' '")
+    text = pytesseract.image_to_string(Image.open(f"Screenshots/{img_name}"), config="-c tessedit_char_whitelist=0123456789aevW:' '")
     if len(text) != 0:
         ind = text.find("e: ")
         if ind != -1:
@@ -389,4 +389,4 @@ if __name__ == '__main__':
             file = open("populations_towY" + str(run) + ".pkl", "wb")
             pickle.dump(all_populations, file)
             file.close()
-# show_grid()
+        # show_grid()
