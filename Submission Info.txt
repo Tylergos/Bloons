@@ -1,0 +1,24 @@
+You will not be able to run this program yourself since it needs external applications (Requires Bloons TD5, and recommended to have Cheat Engine)
+Video included showing the GA start running to prove it works
+
+General Things we did:
+Learn how to screenshot with Python (Setting up grid + death screen for game)
+Did image manipulation (For the death screen to be more clear, submitted example of death after image manipulation)
+Learned how to read off of screen with tesseract (Read the death wave off the death screenshot)
+Learned how to interact with a window screen (Make game in focus, placing towers and starting enemies)
+Made the GA utilize multiple mutations, including the ability to do multiple at a time
+Did multiobjective (Death wave - Towers Placed)
+Did population re-initialization (Every 4th gen, reset aside from best)
+Did elitism (Both for re-initialization and per generation)
+Added ability to start from already made builds (Builds stored in pickle files can be read from to continue generating)
+Reduced the search space through introducing tower sections (Lead towers, camo towers, all towers)
+
+Files included:
+Main.py: The main program to run the GA on Bloons TD5.
+StartFromFile.py: The main program modified to run on pickle files to continue the evolution.
+TowerTypes.py: The types of towers available to place, split into three categories to reduce the search space.
+Tower.py: The tower class to hold the upgrades and placement of a tower.
+Permutation.py: The class to manage a permutation of a build. Contains information about the fitness and towers placed.
+DeathScreen.png: An example of the modified death screenshot to be read by pytesseract to determine the wave achieved
+Bloons Writeup.pdf: The writeup for the project
+Bloons TD5 GA.mp4: A video of the project running the start of the GA
